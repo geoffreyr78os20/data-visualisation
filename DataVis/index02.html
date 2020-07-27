@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Data Vis</title>
+
+  <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
+  <script src="https://cdn.rawgit.com/matthewbryancurtis/aframe-star-system-component/db4f1030/index.js"></script>
+  <!-- <script src="https://unpkg.com/aframe-super-keyboard@1.0.0/dist/aframe-super-keyboard.min.js"></script> -->
+  <script src="https://d3js.org/d3.v3.min.js"></script>
+</head>
+
+<body>
+
+  <style>
+    a-scene {
+      z-index: 99;
+      height: 90vh;
+      width: 99vw;
+    }
+  </style>
+
+  <input type="text" id="myText">
+  <button>change date</button>
+
+  <!-- Embbed a-frame scene inside a div element-->
+  <div id="myEmbeddedScene">
+    <a-scene embedded>
+      <!-- Camera -->
+      <a-entity camera look-controls wasd-controls position="450 1.6 300">
+        <!-- fuse attached to camera-->
+        <a-entity cursor="fuse: true; fuseTimeout: 500" position="0 0 -1"
+          geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03" material="color: black; shader: flat">
+        </a-entity>
+      </a-entity>
+      <!-- <a-entity id="keyboard" super-keyboard="hand: #mouseCursor; imagePath:/dist/" position="450 -1.6 290"
+        rotation="-30 0 0" scale="10 10 10"></a-entity> -->
+    </a-scene>
+  </div>
+
+  <script>
+
+    // Parse the Data
+    d3.csv('data.csv', function (data) {
+
+      // Create and Button with the fitler date function
+      var button = d3.select('body').select('button')
+        .text('Change Date')
+        .style('display', 'block')
+        .on('click', function () {
+
+          // Store bar chart data in variable
+          let dataVariable = 'total_cases'
+
+          let yScale = d3.scale.linear()
+            .range([0, 3])
+            .domain(d3.extent(data, function (d) {
+              console.log(d[dataVariable]);
+              return d[dataVariable]
+            }));
+
+
+          // Create total cases tag that appears when you hover over bar chart
+          var totalCasesTag = d3.select('a-scene')
+            .selectAll('a-text')
+            .data(data)
+            .enter()
+            .append('a-text')
+            .filter(function (d) {
+              return d.date == `${document.getElementById('myText').value}`;
+            })
+            .attr({
+              value: function (d) {
+                return d.total_cases
+              }
+            })
+            .attr({
+              position: function (d, i) {
+                var x = (i * 20) * 2
+                var y = -10
+                var z = -25
+                return x + " " + y + " " + z
+              }
+            })
+            .attr('color', 'black')
+            .attr({
+              scale: function (d, i) {
+                var x = 50
+                var y = 50
+                var z = 50
+                return x + " " + y + " " + z
+              }
+            })
+            .attr('opacity', 0)
+
+
+          // Select aframe scene and filter data using input field
+          d3.select('a-scene')
+            .selectAll('a-box')
+            .data(data)
+            .enter()
+            .append('a-box')
+            .filter(function (d) {
+              return d.date == `${document.getElementById('myText').value}`;
+            })
+            .attr('color', 'lightgreen')
+            // Height of bar chart is the total number of cases multiplied by 1000
+            .attr('height', function (d) {
+              return yScale(d[dataVariable]) * 1000
+            })
+            .attr('width', 20)
+            .attr({
+              position: function (d, i) {
+                var x = (i * 20) * 2
+                var y = yScale(d[dataVariable]) * 500;
+                var z = -30
+                return x + " " + y + " " + z
+              }
+            })
+
+            // Display number of total cases tag on click
+            .on('click', function (d) {
+              totalCasesTag.transition()
+                .attr('opacity', 1)
+            })
+
+          // Creates area name and displays it in VR
+          var text = d3.select('a-scene').selectAll('a-text.name')
+            .data(data)
+            .enter()
+            .append('a-text')
+            .filter(function (d) {
+              return d.date == `${document.getElementById('myText').value}`;
+            })
+            .attr({
+              position: function (d, i) {
+                var x = (i * 15) * 2.75
+                var y = -23
+                var z = -25
+                return x + " " + y + " " + z
+              }
+            })
+            .attr('value', function (d) {
+              return d.area_name.replace(' ', '\n');
+            })
+            .attr({
+              scale: function (d, i) {
+                var x = 20
+                var y = 20
+                var z = 20
+                return x + " " + y + " " + z
+              }
+            })
+            .attr('color', 'red')
+            .attr('align', 'center')
+
+        })
+    })
+
+  </script>
+
+</body>
+
+</html>

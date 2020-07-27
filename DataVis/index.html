@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+
+<meta charset="utf-8">
+
+<head>
+  <script src="https://d3js.org/d3.v4.js"></script>
+</head>
+
+<body>
+
+  <input type="text" id="myText">
+
+  <button onclick="update(`${document.getElementById('myText').value}`)">change date</button>
+  <button onclick="clear()">
+    Clear
+  </button>
+
+  <!-- div where the graph will take place -->
+  <div id="my_dataviz"></div>
+
+  <script>
+    // set the dimensions and margins of the graph
+    var margin = { top: 20, right: 50, bottom: 40, left: 200 },
+      width = 2000 - margin.left - margin.right,
+      height = 800 - margin.top - margin.bottom;
+
+    // append the svg object to the body of the page
+    var svg = d3.select("#my_dataviz")
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // Initialize the Y axis
+    var yAxis = svg.append("g")
+      .attr("class", "myYaxis")
+
+    var xAxis = svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+
+    //  Create Update graph function
+    function update(selectedVar) {
+
+      // Parse the Data
+      d3.csv("data.csv", function (data) {
+
+        // Add X axis
+        var x = d3.scaleLinear()
+          .domain([0, 2000])
+          .range([0, width]);
+
+        xAxis.transition().duration(1000).call(d3.axisBottom(x))
+          .selectAll("text")
+          .attr("transform", "translate(-10,0)rotate(-45)")
+          .style("text-anchor", "end");
+
+        // Y axis
+        var y = d3.scaleBand()
+          .range([0, height])
+          .domain(data.map(function (d) { return d.area_name; }))
+          .padding(.5);
+
+        yAxis.transition().duration(1000).call(d3.axisLeft(y));
+
+        // Bars
+        var u = svg.selectAll(".bar").data(data)
+        u
+          .enter()
+          .append("rect")
+          .filter(function (d) {
+            console.log(document.getElementById('myText').value)
+            return d.date == selectedVar;
+          })
+          .merge(u)
+          .transition()
+          .duration(1000)
+          .attr("x", x(0))
+          .attr("y", function (d) { return y(d.area_name); })
+          .attr("width", function (d) { return x(d.total_cases); })
+          .attr("height", y.bandwidth())
+          .attr("fill", "#69b3a2")
+          .remove();
+      })
+
+    }
+
+    update(`${document.getElementById('myText').value}`)
+
+  </script>
+
+
+  <style>
+    body {
+      background-color: #3c3c3c;
+      color: #cfcfcf;
+    }
+
+    div {
+      line-height: 15px;
+      margin-bottom: 3px;
+      background-color: grey;
+      text-align: right;
+      padding-right: 5px;
+      font-size: 10px;
+      color: #cfcfcf;
+    }
+  </style>
+
+
+
+</body>
+
+</html>
